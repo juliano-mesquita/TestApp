@@ -1,4 +1,7 @@
 name: Android CI
+env:
+  # The name of the main module repository
+  main_project_module: app
 
 on:
   push:
@@ -19,8 +22,17 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
         cache: gradle
+    - name: Set env
+      run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
 
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
     - name: Build with Gradle
       run: ./gradlew build
+    - name: Build apk debug project (APK) - ${{ env.main_project_module }} module
+      run: ./gradlew assembleDebug
+    - name: Upload APK Debug - ${{ env.repository_name }}
+      uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.RELEASE_VERSION }} - APK(s) debug generated
+          path: ${{ env.main_project_module }}/build/outputs/apk/debug/
